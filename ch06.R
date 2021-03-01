@@ -20,7 +20,7 @@ exam %>% filter(class == 1)
 # %>%는 파이프 연산자, 물길을 연결하는 파이프처럼 함수를 연결한다. ctrl+shft+m 누르면 됨!
 
 exam %>% filter(class == 2)
-exam %>% filter(class != 1) # class가 1이 아닌 경우우
+exam %>% filter(class != 1) # class가 1이 아닌 경우
 exam %>% filter(class != 3)
 
 exam %>% filter(math > 50)
@@ -169,15 +169,127 @@ mpg %>%
   head(3)
 
 
+# 6-6 집단별로 요약하기
+exam %>% summarise(mean_math = mean(math)) # math 평균 산출
+
+exam %>% 
+  group_by(class) %>% # class 별로 분리
+  summarise(mean_math = mean(math)) # math 평균 산출
+
+# tibble은 데이터 프레임에 몇 가지 기능이 추가된 것. <int>는 정수 <dbl>은 부동소수점
+
+exam %>%
+  group_by(class) %>% 
+  summarise(mean_math = mean(math),
+            sum_math = sum(math),
+            median_math = median(math),
+            n = n()) # 데이터가 몇 행으로 되어 있든, 빈도를 구한다. 즉 행의 개수 세기.
+
+mpg %>% 
+  group_by(manufacturer, drv) %>%  # 회사별, 구동 방식별 분리
+  summarise(mean_cty = mean(cty)) %>%  # cty 평균 산출
+  head(10)
+
+mpg %>% 
+  group_by(manufacturer) %>% 
+  filter(class == "suv") %>% 
+  mutate(tot = (cty+hwy)/2) %>% 
+  summarise(mean_tot = mean(tot)) %>% 
+  arrange(desc(mean_tot)) %>% 
+  head(5)
+
+# 혼자서 해보기 p.150
+mpg %>% 
+  group_by(class) %>% 
+  summarise(mean_cty = mean(cty)) %>% 
+  arrange(desc(mean_cty))
+
+mpg %>% 
+  group_by(manufacturer) %>% 
+  summarise(mean_hwy = mean(hwy)) %>% 
+  arrange(desc(mean_hwy)) %>% 
+  head(3)
+
+mpg %>% 
+  group_by(manufacturer) %>% 
+  summarise(class = "compact",
+            n = n()) %>% 
+  arrange(desc(n))
+  
+
+# 6-7 데이터 합치기
+test1 <- data.frame(id = c(1, 2, 3, 4, 5),
+                    midterm = c(60, 80, 70, 90, 85))
+
+test2 <- data.frame(id = c(1, 2, 3, 4, 5),
+                    final = c(70, 83, 65, 95, 80))
+
+test1
+test2
+
+total <- left_join(test1, test2, by="id")
+total
+
+name <- data.frame(class = c(1, 2, 3, 4, 5),
+                   teacher = c("kim", "lee", "park", "choi", "jung"))
+name
+
+exam_new <- left_join(exam, name, by = "class")
+exam_new
 
 
+group_a <- data.frame(id = c(1, 2, 3, 4, 5),
+                      test = c(60, 80, 70, 90, 85))
+
+group_b <- data.frame(id = c(6, 7, 8, 9, 10),
+                      test = c(70, 83, 65, 95, 80))
+
+group_a
+group_b
+
+group_all <- bind_rows(group_a, group_b)
+group_all
+
+# 혼자서 해보기 p.156
+fuel <- data.frame(fl = c("c", "d", "e", "p", "r"),
+                   price_fl = c(2.35, 2.38, 2.11, 2.76, 2.22),
+                   stringsAsFactors = F)
+
+fuel
+
+mpg <- left_join(mpg, fuel, by = "fl")
+mpg
+
+mpg %>% 
+  select(model, fl, price_fl) %>% 
+  head(5)
 
 
+# 분석 도전! p. 160
+midwest <- as.data.frame(ggplot2::midwest)
 
+midwest <- midwest %>% 
+  mutate(perteenage = (poptotal - popadults)/poptotal*100)
 
+View(midwest)
 
+midwest %>% 
+  arrange(desc(perteenage)) %>% 
+  head(5)
 
+midwest <- midwest %>% 
+  mutate(grade = ifelse(perteenage >= 40, "large",
+                        ifelse(perteenage >= 30, "middle", "small")))
 
+table(midwest$grade)
+
+midwest <- midwest %>% 
+  mutate(perasian = popasian/poptotal*100)
+
+midwest %>% 
+  select(perasian, state, county) %>% 
+  arrange(perasian) %>% 
+  head(10)
 
 
 
